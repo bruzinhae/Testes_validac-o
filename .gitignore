@@ -1,0 +1,31 @@
+# Arquivos compilados e diretório de build do Maven
+target/
+*.class
+*.jar
+*.war
+
+# Configurações do Eclipse
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+# Configurações do IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+out/
+
+# Configurações do VS Code
+.vscode/
+
+# Arquivos de sistema operacional (Mac/Windows)
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
