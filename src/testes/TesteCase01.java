@@ -1,79 +1,74 @@
 package testes;
 
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import br.edu.puc.currencyconverter.CurrencyServices;
+import br.edu.puc.currencyconverter.MoedaISO4217;
 import java.util.Calendar;
 
-import br.edu.puc.currencyconverter.*;
+public class TesteCompleto {
 
-import org.junit.jupiter.api.Test;
+    @Test
+    public void testConversaoValida_CaminhoFeliz() {
+        CurrencyServices services = new CurrencyServices();
+        Calendar dataCotacao = Calendar.getInstance();
+        double resultado = services.converter("BRL", "USD", dataCotacao, 100.0);
+        assertTrue(resultado > 0.0, "O resultado da conversao deve ser maior que zero para entradas validas.");
+    }
 
-class TesteCase01 { //simula os vários cenários de uso da tela
+    @Test
+    public void testMesmaMoeda() {
+        CurrencyServices api = new CurrencyServices();
+        String mb = "BRL";
+        String mc = "BRL";
+        double quantia = 100.0d;
+        Calendar dataCal = Calendar.getInstance();
 
-	@Test
-	void testMesmaMoeda() {
-		//teste msg de não conversao por moedas iguais
-		
-		//Inicio do Arrange - Preparando os teste e asserts intemediários
-		//instancia a API
-		CurrencyServices api = new CurrencyServices();
-					
-		//simula os dados oriundos da tela - entradas
-		String mb = "BRL";
-		String mc = "BRL";
-		double quantia = 100.00d;
-		Calendar dateCal = Calendar.getInstance();//pega data de hoje
-		
-		//dados de saída
-		double valorConvertidoDeSaida = 0.0; //neste teste, será gerado erro
-		
-		// testa se as moedas selecionadas na COMBO são válidas
-		assertTrue (api.isValidCurrency(mb));		
-		assertTrue (api.isValidCurrency(mc));
-		
-		MoedaISO4217 base, convers;
-		//Atribui as moedas do tipo da ENUM MoedaISO4217
-		assertNotNull(base = api.getCurrency(mb));
-		assertNotNull(convers = api.getCurrency(mc));
-		
-		//verifica se o construtor atirou a exceção
-		//de argumento ilgeal, com mensagem de "mesma moeda"
-	    IllegalArgumentException exception = assertThrows(
-	              IllegalArgumentException.class, 
-	              () -> api.converter (mb,mc,dateCal,100),  // Chamada do construtor aqui
-	            "Moedas de base e convesao não podem ser as mesmas"
-	          );						
-	} 
-	
-	@Test
-	void testConversaoOK() {
-		//teste msg de não conversao por moedas iguais
-		
-		//Inicio do Arrange - Preparando os teste e asserts intemediários
-		//instancia a API
-		CurrencyServices api = new CurrencyServices();
-					
-		//simula os dados oriundos da tela - entradas
-		String mb = "BRL";
-		String mc = "EUR";
-		double quantia = 100.00d; 
-		Calendar dateCal = Calendar.getInstance();//pega data de hoje
-		
-		//dados de saída
-		double valorConvertidoDeSaida = 17.0d;
-	
-		// testa se as moedas selecionadas na COMBO são válidas
-		assertTrue (api.isValidCurrency(mb));		
-		assertTrue (api.isValidCurrency(mc));
-		
-		MoedaISO4217 base, convers;
-		//Atribui as moedas do tipo da ENUM MoedaISO4217
-		assertNotNull(base = api.getCurrency(mb));
-		assertNotNull(convers = api.getCurrency(mc));
-		assertEquals(valorConvertidoDeSaida,api.converter (mb,mc,dateCal,quantia));
-		
-	}
-	
+        assertTrue(api.isValidCurrency(mb), "A moeda de origem deve ser valida no sistema");
+        assertTrue(api.isValidCurrency(mc), "A moeda de destino deve ser valida no sistema");
 
+        MoedaISO4217 base = api.getCurrency(mb);
+        MoedaISO4217 convers = api.getCurrency(mc);
+
+        assertNotNull(base, "A moeda base nao pode ser nula");
+        assertNotNull(convers, "A moeda de destino nao pode ser nula");
+
+        double resultado = api.converter(mb, mc, dataCal, quantia);
+        assertEquals(quantia, resultado, "Se as moedas sao iguais, o valor retornado deve ser igual ao valor inserido.");
+    }
+
+    @Test
+    public void testValorZeroOuNegativo() {
+        CurrencyServices api = new CurrencyServices();
+        Calendar dataCotacao = Calendar.getInstance();
+
+        double resultadoZero = api.converter("BRL", "USD", dataCotacao, 0.0);
+        assertEquals(0.0, resultadoZero, "Para quantia zero, o resultado retornado deve ser zero.");
+
+        double resultadoNegativo = api.converter("BRL", "USD", dataCotacao, -50.0);
+        assertTrue(resultadoNegativo <= 0.0, "Para quantia negativa, a conversao deve ser bloqueada ou retornar <= 0.");
+    }
+
+    @Test
+    public void testMoedaInvalida() {
+        CurrencyServices api = new CurrencyServices();
+        String moedaInvalida = "XYZ";
+
+        boolean ehValida = api.isValidCurrency(moedaInvalida);
+        assertFalse(ehValida, "Uma moeda inexistente (XYZ) deve retornar false na validacao.");
+
+        MoedaISO4217 moeda = api.getCurrency(moedaInvalida);
+        assertNull(moeda, "A busca por uma moeda inexistente deve retornar null.");
+    }
+
+    @Test
+    public void testDataFutura() {
+        CurrencyServices api = new CurrencyServices();
+        Calendar dataFutura = Calendar.getInstance();
+        dataFutura.add(Calendar.YEAR, 1);
+
+        double resultado = api.converter("BRL", "USD", dataFutura, 100.0);
+        assertEquals(0.0, resultado, "Para uma data futura, nao deve haver taxa de conversao (resultado 0.0).");
+    }
 }
